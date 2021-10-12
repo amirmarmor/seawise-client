@@ -1,8 +1,6 @@
 import {createSlice} from "@reduxjs/toolkit"
 
-const host = process.env["REACT_APP_BACKEND_HOST"] || "127.0.0.1"
-const api = `http://${host}:1323`
-const initialState = {offset: 0, cleanup: false, rules: []}
+const initialState = {offset: 0, cleanup: false, rules: [], device: 0}
 
 export const configSlice = createSlice({
   name: 'config',
@@ -18,7 +16,7 @@ export const configSlice = createSlice({
 export const getConfigAsync = () => {
   return async (dispatch) => {
     try {
-      const result = await fetch(`${api}/config`)
+      const result = await fetch(`http://${window.backendHost}/config`)
       const config = await result.json()
       dispatch(updateConfig(config))
     } catch (err) {
@@ -31,7 +29,7 @@ export const actionAsync = (action) => {
   return async dispatch => {
     try {
       let body = JSON.stringify(action)
-      const result = await fetch(`${api}/action`, {
+      const result = await fetch(`${window.backendHost}/action`, {
         method: "POST",
         headers: {
           "Content-type": "application/json"
@@ -50,7 +48,7 @@ export const actionAsync = (action) => {
 export const setConfigAsync = (config) => {
   return async (dispatch) => {
     try {
-      const result = await fetch(`${api}/config`, {
+      const result = await fetch(`${window.backendHost}/config`, {
         method: "POST",
         headers: {
           "Content-type": "application/json"

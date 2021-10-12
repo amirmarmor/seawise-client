@@ -1,12 +1,14 @@
 import React, {useEffect, useState} from "react"
 import {useDispatch, useSelector} from "react-redux"
 import {selectConfig, setConfigAsync} from "../features/config/configSlice"
-import {Button, Card, Col, Container, Form, Row,} from "react-bootstrap"
+import {selectDevice} from "../features/device/deviceSlice"
+import {Button, Card, Col, Container, Form, Row, Alert} from "react-bootstrap"
 import RuleRow from "../components/Configuration/rules"
 import Instructions from "../components/Configuration/instructions"
 
 function Configuration() {
   const config = useSelector(selectConfig)
+  const device = useSelector(selectDevice)
   const dispatch = useDispatch()
   const [currentConfig, setConfig] = useState()
 
@@ -109,6 +111,60 @@ function Configuration() {
     }
   }
 
+  function renderForm(){
+    if(device && device.ip && device.ip != "n/a"){
+      return <Form onSubmit={handleSubmit}>
+        <Row>
+          <Col className="px-1" md="5">
+            <Form.Group>
+              <label>Offset</label>
+              <Form.Control
+                value={currentConfig ? currentConfig.offset : '0'}
+                placeholder="Offset"
+                type="text"
+                name={"offset"}
+                onChange={e => handleChange(e)}
+              />
+            </Form.Group>
+          </Col>
+          <Col className="px-1" md="5">
+            <label>Clean up</label>
+            < br/>
+            <input
+              name={"cleanup"}
+              id={"cleanup"}
+              type={"checkbox"}
+              value={getCleanupValue()}
+              checked={getCleanupValue()}
+              onChange={e => handleChange(e)}
+            />
+          </Col>
+        </Row>
+        <Row>
+          <Card.Header>Rules</Card.Header>
+        </Row>
+        {renderRules()}
+        <Button
+          className={"btn-fill pull-right"}
+          style={{marginRight: "10px"}}
+          onClick={addRule}
+        > + </Button>
+        <Button
+          className="btn-fill pull-right"
+          type="submit"
+          variant="info"
+        >
+          Update Configuration
+        </Button>
+        <div className="clearfix"/>
+      </Form>
+    } else {
+      return <Alert variant={"danger"}>
+        Please select device first!
+      </Alert>
+    }
+  }
+
   return (
     <Container fluid>
       <Row>
@@ -118,51 +174,7 @@ function Configuration() {
               <Card.Title as="h4">Edit Configuration</Card.Title>
             </Card.Header>
             <Card.Body>
-              <Form onSubmit={handleSubmit}>
-                <Row>
-                  <Col className="px-1" md="5">
-                    <Form.Group>
-                      <label>Offset</label>
-                      <Form.Control
-                        value={currentConfig ? currentConfig.offset : '0'}
-                        placeholder="Offset"
-                        type="text"
-                        name={"offset"}
-                        onChange={e => handleChange(e)}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col className="px-1" md="5">
-                    <label>Clean up</label>
-                    < br/>
-                    <input
-                      name={"cleanup"}
-                      id={"cleanup"}
-                      type={"checkbox"}
-                      value={getCleanupValue()}
-                      checked={getCleanupValue()}
-                      onChange={e => handleChange(e)}
-                    />
-                  </Col>
-                </Row>
-                <Row>
-                  <Card.Header>Rules</Card.Header>
-                </Row>
-                {renderRules()}
-                <Button
-                  className={"btn-fill pull-right"}
-                  style={{marginRight: "10px"}}
-                  onClick={addRule}
-                > + </Button>
-                <Button
-                  className="btn-fill pull-right"
-                  type="submit"
-                  variant="info"
-                >
-                  Update Configuration
-                </Button>
-                <div className="clearfix"/>
-              </Form>
+              {renderForm()}
             </Card.Body>
           </Card>
         </Col>

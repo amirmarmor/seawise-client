@@ -1,15 +1,23 @@
 import {Card, Form, ListGroup} from "react-bootstrap"
 import React from "react"
-import {useDispatch} from "react-redux"
+import {useSelector, useDispatch} from "react-redux"
+import {selectDevice} from "../../features/device/deviceSlice"
 import {actionAsync} from "../../features/config/configSlice"
 import CheckBox from "./checkBox"
 
 //TODO: get host from one place
-const host = process.env["REACT_APP_BACKEND_HOST"] || "127.0.0.1"
 
 function ChannelState(props) {
+  const device = useSelector(selectDevice)
   const dispatch = useDispatch()
-  const src = `http://${host}:8080/stream/${props.channel}`
+  const src = `http://{$:8080/stream/${props.channel}`
+
+  function getSrc(){
+    if(device && device.ip && device.ip != "n/a"){
+      return `http://${device.ip}:8080/stream/${props.channel}`
+    }
+    return ""
+  }
 
   function handleChange(type, camera) {
     dispatch(actionAsync({type, channel: camera.toString()}))
@@ -17,7 +25,7 @@ function ChannelState(props) {
 
   function showIframe() {
     if (props.show) {
-      return <iframe src={src} style={{width: "100%", height: "500px"}}/>
+      return <iframe src={getSrc()} style={{width: "100%", height: "500px"}}/>
     }
   }
 
