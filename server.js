@@ -1,72 +1,125 @@
 const express = require('express')
 const path = require('path')
-const {createClient} = require("redis")
 const cors = require('cors')
-
-const snPrefix = "serial-"
-const idPrefix = "id-"
-const currentIdKey = "currentid"
+const bodyParser = require('body-parser')
+const {
+  init,
+  getDevice,
+  getRegistration,
+  registerDevice,
+  deleteRegistration,
+  updateDevice,
+  getRegistrations
+} = require("./aws-wrapper")
 
 const app = express()
 
 const port = process.env.PORT || 5000
+const region = process.env.AWS_REGION || "us-west-2"
+const endpoint = process.env.ENDPOINT || "http://localhost:8000"
+const config = {region, endpoint}
 
 start()
 
 async function start(){
-  const client = createClient()
-  client.on('error', err => console.log(`redis client error`, err))
-
-  await client.connect()
+  try {
+    await init(config)
+  } catch(err){
+    console.log(err)
+    throw new Error(`failed to start server ${err}`)
+  }
   app.use(cors())
+  app.use(bodyParser.json())
   app.use(express.static(path.join(__dirname, 'build')))
 
-  app.get("/register/:sn/:ip", async (req, res) => {
-    let sn = req.params.sn
-    let ip = req.params.ip
-    console.log("got sn", sn, ip)
-    const id = await client.get(snKey(sn))
-    if(id){
-      console.log(`device ${id} already registered`)
-      const ip = await client.get(idKey(id))
-      res.json({msg: "device already registered", id, ip})
-    } else {
-      let currentId = await client.get(currentIdKey)
-      if(currentId){
-        let id = currentId +1
-        console.log(`registering new device - ${id}`)
-        await client.set(snKey(sn), id)
-        await client.set(idKey(id), ip)
-        await client.set(currentIdKey, id)
+
+  app.post("/api/register", async (req, res) => {
+    console.log("got sn", req.body)
+    try {
+      let registration = await getRegistration(req.body.sn)
+      if(registration.id){
+        let msg = `device ${registration.id} already registered`
+        console.log(msg)
+        res.json({msg})
       } else {
-        console.log(`registering first device`)
-        await client.set(snKey(sn), "1")
-        await client.set(idKey("1"), ip)
-        await client.set(currentIdKey, "1")
+        let lastRegistration = await getRegistration("0")
+        let newId = "1"
+        if(lastRegistration) {
+          newId = parseInt(lastRegistration.id) + 1
+        }
+
+        try {
+          let result = await registerDevice(req.body, newId.toString())
+          console.log(result)
+        } catch(err){
+          console.log(err)
+          res.status(500).json({error: "failed to register device"})
+          return
+        }
+
+        try {
+          let updatedId = await registerDevice({sn: "0", owner: "none"}, newId.toString())
+          res.json({msg: `new device registered, id (${newId}) - ${updatedId}`})
+        } catch(err){
+          console.log(err)
+          res.status(500).json({error: "failed to update last device"})
+          return
+        }
       }
-      res.json({msg: "new device registered"})
+    } catch(err){
+      console.log(err)
+      res.status(500).json({error: "failed to get device"})
+      return err
     }
   })
 
-  app.get('/device/:id', async (req, res) => {
-    let ip = await client.get(idKey(req.params.id))
-    console.log(ip)
-    if(!ip) {
-      res.json({ip: "n/a"})
-    } else {
-      res.json({ip})
+  app.delete('/api/registration/delete/:sn', async (req, res) => {
+    try {
+      let result = await deleteRegistration(req.params.sn)
+      console.log(result)
+      res.json({msg: `registration delete`})
+    } catch(err){
+      console.log(err)
+      res.status(500).json({error: "failed to delete registration"})
     }
+  })
+
+  app.get('/api/device/:id', async (req, res) => {
+    try {
+      let deviceConfig = await getDevice(req.params.id)
+      console.log(deviceConfig)
+      res.json(deviceConfig)
+    } catch(err){
+      console.log(err)
+      res.status(500).json({error: "failed to get device"})
+    }
+  })
+
+  app.get('/api/devices', async (req, res) => {
+    try {
+      let deviceIds = await getRegistrations("eco")
+      console.log(deviceIds)
+      res.json(deviceIds)
+    } catch(err){
+      console.log(err)
+      res.status(500).json({error: "failed to get devices"})
+    }
+  })
+
+  app.post('/api/device', async (req, res) => {
+    try {
+      let result = await updateDevice(req.body)
+      let msg = `device updated`
+      console.log(msg + "-" + JSON.stringify(result))
+      res.json({msg})
+    } catch(err) {
+      console.log(err)
+      res.status(500).json({error: "failed to update device"})
+    }
+
   })
 
   app.listen(port, () =>
     console.log(`Listening on port ${port}`)
   )
-}
-
-function snKey(sn){
-  return snPrefix + sn
-}
-
-function idKey(id){
-  return idPrefix + id
 }
