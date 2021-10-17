@@ -10,8 +10,10 @@ import "./assets/css/animate.min.css"
 import "./assets/scss/light-bootstrap-dashboard-react.scss?v=2.0.0"
 import "./assets/css/demo.css"
 import "@fortawesome/fontawesome-free/css/all.min.css"
+import {getDevicesAsync} from "./features/device/deviceSlice"
 
 const store = configureStore()
+store.dispatch(getDevicesAsync())
 
 const renderApp = () =>
   render(
@@ -19,7 +21,7 @@ const renderApp = () =>
       <BrowserRouter>
         <Switch>
           <Route path="/admin" render={(props) => <AdminLayout {...props} />}/>
-          <Redirect from="/" to="/admin/device"/>
+          <Redirect from="/" to="/admin/devices"/>
         </Switch>
       </BrowserRouter>
     </Provider>,

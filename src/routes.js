@@ -1,15 +1,8 @@
-import Config from "views/Configuration"
+// import Config from "views/configuration"
 import Channels from "views/Channels"
-import Device from "views/Device"
+import Devices from "views/Devices"
 
 const dashboardRoutes = [
-  {
-    path: "/device",
-    name: "Device",
-    icon: "nc-icon nc-circle-09",
-    component: Device,
-    layout: "/admin"
-  },
   {
     path: "/channels",
     name: "Video",
@@ -18,10 +11,10 @@ const dashboardRoutes = [
     layout: "/admin"
   },
   {
-    path: "/config",
+    path: "/devices",
     name: "Configuration",
     icon: "nc-icon nc-circle-09",
-    component: Config,
+    component: Devices,
     layout: "/admin"
   }
 ]

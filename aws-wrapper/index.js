@@ -100,10 +100,11 @@ async function deleteDevice(id){
 }
 
 async function addDevice(device){
+  const id = device.id || device.device_id
   const query = {
     Item: {
       [deviceSchema.table.AttributeDefinitions[0].AttributeName]: {
-        S: device.id
+        S: id
       },
       "IP": {
         S: device.ip
@@ -198,10 +199,10 @@ async function getDevice(id){
 
 async function updateDevice(device){
   try {
-    let result = await deleteDevice(device.id)
-    console.log(`old device ${device.id} deleted - ${JSON.stringify(result)}`)
+    let result = await deleteDevice(device.device_id)
+    console.log(`old device ${device.device_id} deleted - ${JSON.stringify(result)}`)
     result = await addDevice(device)
-    console.log(`new device ${device.id} added - ${JSON.stringify(result)}`)
+    console.log(`new device ${device.device_id} added - ${JSON.stringify(result)}`)
     return result
   } catch(err){
     console.log(err)

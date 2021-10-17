@@ -40,7 +40,7 @@ async function start(){
       if(registration.id){
         let msg = `device ${registration.id} already registered`
         console.log(msg)
-        res.json({msg})
+        res.json({registration_id: registration.id})
       } else {
         let lastRegistration = await getRegistration("0")
         let newId = "1"
@@ -51,6 +51,7 @@ async function start(){
         try {
           let result = await registerDevice(req.body, newId.toString())
           console.log(result)
+          res.json({registration_id: newId.toString()})
         } catch(err){
           console.log(err)
           res.status(500).json({error: "failed to register device"})
@@ -87,7 +88,6 @@ async function start(){
   app.get('/api/device/:id', async (req, res) => {
     try {
       let deviceConfig = await getDevice(req.params.id)
-      console.log(deviceConfig)
       res.json(deviceConfig)
     } catch(err){
       console.log(err)
@@ -96,6 +96,7 @@ async function start(){
   })
 
   app.get('/api/devices', async (req, res) => {
+    console.log("GET DEVICES")
     try {
       let deviceIds = await getRegistrations("eco")
       console.log(deviceIds)

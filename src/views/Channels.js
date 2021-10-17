@@ -1,7 +1,6 @@
 import React from "react"
 import {Button, Card, Col, Container, Form, OverlayTrigger, Row, Table, Tooltip,} from "react-bootstrap"
 import {useSelector} from "react-redux"
-import {selectConfig} from "../features/config/configSlice"
 import ChannelRow from "../components/Channels/channelRow"
 
 function Channels() {
