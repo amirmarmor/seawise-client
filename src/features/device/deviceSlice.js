@@ -8,7 +8,6 @@ export const deviceSlice = createSlice({
   initialState,
   reducers: {
     updateCurrent: (state, action) => {
-      console.log(action)
       state.current = action.payload
     },
     updateDevices: (state, action) => {
@@ -20,6 +19,9 @@ export const deviceSlice = createSlice({
     configUpdated: (state, action) => {
       state.updated = action.payload
     },
+    updateRealtime: (state, action) => {
+      state.realtime = action.payload
+    },
     default: state => state
   }
 })
@@ -29,9 +31,8 @@ export const getDevicesAsync = () => {
     try {
       const result = await fetch(`http://${api}/api/devices`)
       const json = await result.json()
-      console.log(json)
       dispatch(updateDevices(json))
-    } catch(err){
+    } catch (err) {
       console.log(err)
     }
   }
@@ -39,7 +40,7 @@ export const getDevicesAsync = () => {
 
 export const getConfigAsync = (id) => {
   return async (dispatch, state) => {
-    if(state.current !== id) {
+    if (state.current !== id) {
       try {
         const result = await fetch(`http://${api}/api/device/${id}`)
         const config = await result.json()
@@ -52,39 +53,28 @@ export const getConfigAsync = (id) => {
   }
 }
 
-// export const actionAsync = (action) => {
-//   return async dispatch => {
-//     try {
-//       let body = JSON.stringify(action)
-//       const result = await fetch(`${window.backendHost}/action`, {
-//         method: "POST",
-//         headers: {
-//           "Content-type": "application/json"
-//         },
-//         body
-//       })
-//       const config = await result.json()
-//       dispatch(updateConfig(config))
-//     } catch (err) {
-//       console.log(err)
-//     }
-//   }
-// }
-
+export const getRealtimeAsync = (id) => {
+  return async (dispatch) => {
+    try {
+      const result = await fetch(`http://${api}/api/realtime/${id}`)
+      const realtime = await result.json()
+      dispatch(updateRealtime(realtime))
+    } catch (err) {
+      console.log(err)
+    }
+  }
+}
 
 export const setConfigAsync = (config) => {
   return async (dispatch) => {
-    console.log(config)
     try {
-      const result = await fetch(`http://${api}/api/device`, {
+      await fetch(`http://${api}/api/device`, {
         method: "POST",
         headers: {
           "Content-type": "application/json"
         },
         body: JSON.stringify(config)
       })
-      const msg = await result.json()
-      console.log("********************", msg)
       dispatch(configUpdated(true))
     } catch (err) {
       console.log(err)
@@ -96,11 +86,13 @@ export const {
   updateCurrent,
   updateDevices,
   updateConfig,
-  configUpdated
+  updateRealtime,
+  configUpdated,
 } = deviceSlice.actions
 export const selectDevices = state => state.device.list
 export const selectCurrent = state => state.device.current
 export const selectConfig = state => state.device.config
+export const selectRealtime = state => state.device.realtime
 export const selectUpdated = state => state.device.updated
 
 export default deviceSlice.reducer

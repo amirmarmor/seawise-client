@@ -1,5 +1,4 @@
 import React from "react"
-import {NavLink, useLocation} from "react-router-dom"
 import {Nav} from "react-bootstrap"
 import {useDispatch, useSelector} from "react-redux"
 import {
@@ -7,18 +6,11 @@ import {
   selectDevices,
   selectCurrent
 } from "../../features/device/deviceSlice"
-import routes from "../../routes"
 
 function Sidebar({color, image, routes}) {
   const devices = useSelector(selectDevices)
   const current = useSelector(selectCurrent)
   const dispatch = useDispatch()
-
-  const location = useLocation()
-
-  const activeRoute = (routeName) => {
-    return location.pathname.indexOf(routeName) > -1 ? "active" : ""
-  }
 
   function handleClick(id) {
     dispatch(getConfigAsync(id))
@@ -26,7 +18,6 @@ function Sidebar({color, image, routes}) {
 
   function renderDevices() {
     if (devices !== undefined) {
-      console.log()
       return devices.map((device, key) =>
         <li
           className={

@@ -1,43 +1,24 @@
-import React, {useState} from "react"
+import React from "react"
 import {useDispatch, useSelector} from "react-redux"
 import {
-  selectDevices,
   selectCurrent,
   selectConfig,
   selectUpdated,
-  getConfigAsync,
   setConfigAsync,
   configUpdated
 } from "../features/device/deviceSlice"
-import {Alert, Button, Card, Col, Container, ListGroup, Row} from "react-bootstrap"
-import DeviceRow from "../components/Device/deviceRow"
-import Instructions from "../components/Device/instructions"
-import ConfigForm from "../components/Device/configForm"
+import {Alert, Col, Container, Row} from "react-bootstrap"
+import Instructions from "../components/Configuration/instructions"
+import ConfigForm from "../components/Configuration/configForm"
 
 function Configuration() {
-  const devices = useSelector(selectDevices)
   const current = useSelector(selectCurrent)
   const config = useSelector(selectConfig)
   const updated = useSelector(selectUpdated)
   const dispatch = useDispatch()
-  const [showConfig, setShowConfig] = useState()
-
-  function handleChange(e) {
-    dispatch(getConfigAsync(e.target.value, e.target.checked))
-    setShowConfig(e.target.checked)
-  }
 
   function handleSubmit(e, config) {
     e.preventDefault()
-    // let rules = currentConfig.rules.map(rule => {
-    //   return {
-    //     ...rule,
-    //     id: rule.id.toString(),
-    //     start: rule.start.toString(),
-    //     duration: rule.duration.toString()
-    //   }
-    // })
-    console.log("submit", config)
     dispatch(setConfigAsync(config))
   }
 

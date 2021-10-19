@@ -11,16 +11,16 @@ services:
       - "./docker/dynamodb:/home/dynamodblocal/data"
     user: root
     working_dir: /home/dynamodblocal
-#  backend:
-#      container_name: backend
-#      build: .
-#      privileged: true
-#      environment:
-#        - ENDPOINT=http://dynamodb-local:8000
-#        - AWS_ACCESS_KEY_ID=dummy
-#        - AWS_SECRET_ACCESS_KEY=dummy
-#        - AWS_REGION=us-west-2
-#      ports:
-#        - "5000:5000"
-#      depends_on:
-#        - dynamodb-local
+  backend:
+      container_name: backend
+      build: .
+      privileged: true
+      environment:
+        - ENDPOINT=http://dynamodb-local:8000
+        - AWS_ACCESS_KEY_ID=dummy
+        - AWS_SECRET_ACCESS_KEY=dummy
+        - AWS_REGION=us-west-2
+      ports:
+        - "5000:5000"
+      depends_on:
+        - dynamodb-local

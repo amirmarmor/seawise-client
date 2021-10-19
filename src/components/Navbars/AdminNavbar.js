@@ -1,6 +1,6 @@
 import React from "react"
 import {NavLink} from "react-router-dom"
-import {Button, Container, Nav, Navbar, NavItem} from "react-bootstrap"
+import {Button, Container, Nav, Navbar} from "react-bootstrap"
 import routes from "routes.js"
 
 function Header() {

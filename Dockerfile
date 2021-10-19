@@ -7,7 +7,7 @@ RUN npm install
 
 FROM stage1 as build
 COPY . ./
-RUN #npm run build
+RUN npm run build
 
 FROM build
 CMD ["node", "server.js"]

@@ -10,7 +10,7 @@ const {
   deleteRegistration,
   updateRegistration,
   updateDevice,
-  getRegistrations, deleteDevice
+  getRegistrations, deleteDevice, getRegistrationById
 } = require("./aws-wrapper")
 
 const app = express()
@@ -35,7 +35,6 @@ async function start(){
 
 
   app.post("/api/register", async (req, res) => {
-    console.log("got sn", req.body)
     try {
       let registration = await getRegistration(req.body.sn)
       if(registration.id){
@@ -51,9 +50,8 @@ async function start(){
         }
 
         try {
-          let result = await registerDevice( {...req.body, id: newId.toString()})
+          await registerDevice( {...req.body, id: newId.toString()})
           await registerDevice({sn: "0", owner: "none", ip:"n/a", channels: "0", id: newId.toString()})
-          console.log(result)
           res.json({id: newId.toString()})
         } catch(err){
           console.log(err)
@@ -67,10 +65,8 @@ async function start(){
   })
 
   app.post("/api/registration/update", async (req, res) => {
-    console.log("got sn", req.body)
     try {
-      let result = await updateRegistration(req.body)
-      console.log(result)
+      await updateRegistration(req.body)
       res.json({msg: `registration updates`})
     } catch(err){
       console.log(err)
@@ -80,8 +76,7 @@ async function start(){
 
   app.delete('/api/registration/delete/:sn', async (req, res) => {
     try {
-      let result = await deleteRegistration(req.params.sn)
-      console.log(result)
+      await deleteRegistration(req.params.sn)
       res.json({msg: `registration delete`})
     } catch(err){
       console.log(err)
@@ -105,10 +100,8 @@ async function start(){
   })
 
   app.get('/api/devices', async (req, res) => {
-    console.log("GET DEVICES")
     try {
       let devices = await getRegistrations("echo")
-      console.log(devices)
       res.json(devices)
     } catch(err){
       console.log(err)
@@ -118,9 +111,8 @@ async function start(){
 
   app.post('/api/device', async (req, res) => {
     try {
-      let result = await updateDevice(req.body)
+      await updateDevice(req.body)
       let msg = `device updated`
-      console.log(msg + "-" + JSON.stringify(result))
       res.json({msg})
     } catch(err) {
       console.log(err)
@@ -131,15 +123,26 @@ async function start(){
 
   app.delete('/api/device/delete/:id', async (req, res) => {
     try {
-      let result = await deleteDevice(req.params.id)
+      await deleteDevice(req.params.id)
       let msg = `device deleted`
-      console.log(msg + "-" + JSON.stringify(result))
       res.json({msg})
     } catch(err) {
       console.log(err)
       res.status(500).json({error: "failed to delete device"})
     }
 
+  })
+
+  app.get('/api/realtime/:id', async (req, res) => {
+    try {
+      const id = req.params.id
+      let config = await getDevice(req.params.id)
+      let info = await getRegistrationById(id)
+      let resp = {r: config.record, ip: info[0].ip, channels: info[0].channels}
+      res.status(200).json(resp)
+    } catch (err){
+      console.log(err)
+    }
   })
 
 

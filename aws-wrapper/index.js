@@ -12,7 +12,6 @@ async function put(query) {
         console.log("failed to put item")
         reject(err)
       }
-      console.log(`item inserted`)
       resolve(result)
     })
   })
@@ -25,7 +24,6 @@ async function deleteItem(query) {
         console.log("failed to delete item")
         reject(err)
       }
-      console.log(`item deleted`)
       resolve(result)
     })
   })
@@ -38,7 +36,6 @@ async function get(query) {
         console.log("failed to get item")
         reject(err)
       }
-      console.log(`got item`)
       result = parseOutput(result)
       resolve(result)
     })
@@ -52,24 +49,10 @@ async function scan(query) {
         console.log("failed to get item")
         reject(err)
       }
-      console.log(`got item`)
       let items = result.Items.map(Item => {
         return parseOutput({Item})
       })
       resolve(items)
-    })
-  })
-}
-
-async function update(query) {
-  return new Promise((resolve, reject) => {
-    client.updateItem(query, (err, result) => {
-      if (err) {
-        console.log("failed to update item")
-        reject(err)
-      }
-      console.log(`item updated`)
-      resolve(result)
     })
   })
 }
@@ -86,12 +69,10 @@ async function deleteRegistration(sn) {
   try {
     let device = await getRegistration(sn)
     try {
-      let result = await deleteItem(query)
-      console.log(result)
+      await deleteItem(query)
       return deleteDevice(device.id)
     } catch (err) {
       console.log(err)
-      throw err
     }
   } catch (err) {
     console.log(err)
@@ -112,7 +93,15 @@ async function deleteDevice(id) {
   return deleteItem(query)
 }
 
+function toBool(string){
+  if(typeof string === 'boolean'){
+    return string
+  }
+  return string === "true"
+}
+
 async function addDevice(device) {
+
   const query = {
     Item: {
       [deviceSchema.table.AttributeDefinitions[0].AttributeName]: {
@@ -122,7 +111,7 @@ async function addDevice(device) {
         S: device.offset
       },
       "CLEANUP": {
-        BOOL: device.cleanup
+        BOOL: toBool(device.cleanup)
       },
       "FPS": {
         S: device.fps
@@ -131,7 +120,7 @@ async function addDevice(device) {
         S: device.rules
       },
       "RECORD": {
-        S: device.record
+        BOOL: toBool(device.record)
       }
     },
     ReturnConsumedCapacity: "TOTAL",
@@ -198,6 +187,26 @@ async function getRegistrations(owner) {
   return scan(query)
 }
 
+async function getRegistrationById(id){
+  let query = {
+    TableName: registrationsSchema.table.TableName,
+    ExpressionAttributeNames: {
+      "#id": "ID",
+      '#sn': "DEVICE_SERIAL_NUMBER"
+    },
+    FilterExpression: "#id = :id and not (#sn = :zero)",
+    ExpressionAttributeValues: {
+      ":id": {
+        S: id
+      },
+      ":zero": {
+        S: "0"
+      }
+    }
+  }
+  return scan(query)
+}
+
 async function getDevice(id) {
   let query = {
     TableName: deviceSchema.table.TableName,
@@ -212,11 +221,8 @@ async function getDevice(id) {
 
 async function updateDevice(device) {
   try {
-    let result = await deleteDevice(device.id)
-    console.log(`old device ${device.id} deleted - ${JSON.stringify(result)}`)
-    result = await addDevice(device)
-    console.log(`new device ${device.id} added - ${JSON.stringify(result)}`)
-    return result
+    await deleteDevice(device.id)
+    return await addDevice(device)
   } catch (err) {
     console.log(err)
     throw err
@@ -225,11 +231,8 @@ async function updateDevice(device) {
 
 async function updateRegistration(registration) {
   try {
-    let result = await deleteRegistration(registration.sn)
-    console.log(`old device ${registration.id} deleted - ${JSON.stringify(result)}`)
-    result = await registerDevice(registration)
-    console.log(`new device ${registration.id} added - ${JSON.stringify(result)}`)
-    return result
+    await deleteRegistration(registration.sn)
+    return await registerDevice(registration)
   } catch (err) {
     console.log(err)
     throw err
@@ -243,18 +246,14 @@ async function init(config) {
 
     let tables = await listTables()
     if (!tables || tables.length === 0) {
-      let res = await createTable(deviceSchema.table)
-      console.log(res)
-      res = await createTable(registrationsSchema.table)
-      console.log(res)
+      await createTable(deviceSchema.table)
+      await createTable(registrationsSchema.table)
     }
     if (tables.indexOf(deviceSchema.table.TableName) === -1) {
-      let res = await createTable(deviceSchema.table)
-      console.log(res)
+      await createTable(deviceSchema.table)
     }
     if (tables.indexOf(registrationsSchema.table.TableName) === -1) {
-      let res = await createTable(registrationsSchema.table)
-      console.log(res)
+      await createTable(registrationsSchema.table)
     }
     console.log("DB initiated")
   } catch (err) {
@@ -313,5 +312,6 @@ module.exports = {
   updateRegistration,
   deleteDevice,
   updateDevice,
-  getRegistrations
+  getRegistrations,
+  getRegistrationById
 }

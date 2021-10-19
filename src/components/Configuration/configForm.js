@@ -1,7 +1,5 @@
 import React, {useEffect, useState} from "react"
-import {useDispatch, useSelector} from "react-redux"
-import {selectDevice} from "../../features/device/deviceSlice"
-import {Button, Card, Col, Container, Form, Row, Alert} from "react-bootstrap"
+import {Button, Card, Col, Form, Row, Alert} from "react-bootstrap"
 import RuleRow from "./rules"
 
 function ConfigForm(props) {
@@ -51,7 +49,6 @@ function ConfigForm(props) {
   }
 
   function handleChange(e) {
-    console.log(currentConfig, e)
     let value = e.target.value
     if (e.target.name === "cleanup") {
       value = e.target.checked.toString()
@@ -64,22 +61,23 @@ function ConfigForm(props) {
   }
 
   function renderRules() {
-    console.log("*******", currentConfig.rules)
-    let rules = JSON.parse(currentConfig.rules)
-    return rules.map((rule, i) =>
-      <RuleRow
-        rule={rule}
-        handleRuleChange={handleRuleChange}
-        removeRule={removeRule}
-        id={i}
-        key={`rule-row-${i}`}
-      />
-    )
+    if (currentConfig) {
+      let rules = JSON.parse(currentConfig.rules)
+      return rules.map((rule, i) =>
+        <RuleRow
+          rule={rule}
+          handleRuleChange={handleRuleChange}
+          removeRule={removeRule}
+          id={i}
+          key={`rule-row-${i}`}
+        />
+      )
+    }
+    return ""
   }
 
   function renderForm() {
-    console.log(props)
-    if (props.current) {
+    if (props.current && currentConfig) {
       return <Form onSubmit={(e) => props.handleSubmit(e, currentConfig)}>
         <Row>
           <Col className="px-1" md="4">
