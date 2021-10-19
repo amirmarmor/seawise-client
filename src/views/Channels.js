@@ -2,6 +2,7 @@ import React from "react"
 import {Button, Card, Col, Container, Form, OverlayTrigger, Row, Table, Tooltip,} from "react-bootstrap"
 import {useSelector} from "react-redux"
 import ChannelRow from "../components/Channels/channelRow"
+import {selectConfig} from "../features/device/deviceSlice"
 
 function Channels() {
   const config = useSelector(selectConfig)
@@ -27,7 +28,9 @@ function Channels() {
   return (
     <>
       <Container fluid>
-        {renderRow()}
+        <Card>
+
+        </Card>
       </Container>
     </>
   )

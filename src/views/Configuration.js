@@ -1,4 +1,4 @@
-import React from "react"
+import React, {useState} from "react"
 import {useDispatch, useSelector} from "react-redux"
 import {
   selectDevices,
@@ -9,20 +9,22 @@ import {
   setConfigAsync,
   configUpdated
 } from "../features/device/deviceSlice"
-import {Alert, Button, Card, Col, Container, Row} from "react-bootstrap"
+import {Alert, Button, Card, Col, Container, ListGroup, Row} from "react-bootstrap"
 import DeviceRow from "../components/Device/deviceRow"
 import Instructions from "../components/Device/instructions"
-import Configuration from "../components/Device/configuration"
+import ConfigForm from "../components/Device/configForm"
 
-function Devices() {
+function Configuration() {
   const devices = useSelector(selectDevices)
   const current = useSelector(selectCurrent)
   const config = useSelector(selectConfig)
   const updated = useSelector(selectUpdated)
   const dispatch = useDispatch()
+  const [showConfig, setShowConfig] = useState()
 
-  function handleChange(id) {
-    dispatch(getConfigAsync(id))
+  function handleChange(e) {
+    dispatch(getConfigAsync(e.target.value, e.target.checked))
+    setShowConfig(e.target.checked)
   }
 
   function handleSubmit(e, config) {
@@ -40,23 +42,11 @@ function Devices() {
   }
 
 
-  function renderDevices() {
-    if (devices === undefined) {
-      return <Alert variant={"Primary"}>
-        Waiting to receive devices ID's
-      </Alert>
-    }
-
-    return devices.map((device, i) => {
-      return <DeviceRow id={device.id} checked={device.id === current} handleChange={handleChange} key={i}/>
-    })
-  }
-
   function renderConfiguration() {
     if (!config) {
-      return <Configuration/>
+      return <ConfigForm/>
     } else {
-      return <Configuration
+      return <ConfigForm
         current={current}
         config={config}
         handleSubmit={handleSubmit}
@@ -68,16 +58,6 @@ function Devices() {
     <Container fluid>
       <Row>
         <Col md="8">
-          <Row>
-            <Card>
-              <Card.Header>
-                <Card.Title as="h4">Edit Configuration</Card.Title>
-              </Card.Header>
-              <Card.Body>
-                {renderDevices()}
-              </Card.Body>
-            </Card>
-          </Row>
           <Row>
             {renderConfiguration()}
           </Row>
@@ -101,4 +81,4 @@ function Devices() {
   )
 }
 
-export default Devices
+export default Configuration

@@ -5,10 +5,10 @@ const registrationsSchema = require("./registrationsSchema")
 
 let client
 
-async function put(query){
+async function put(query) {
   return new Promise((resolve, reject) => {
     client.putItem(query, (err, result) => {
-      if(err){
+      if (err) {
         console.log("failed to put item")
         reject(err)
       }
@@ -18,10 +18,10 @@ async function put(query){
   })
 }
 
-async function deleteItem(query){
+async function deleteItem(query) {
   return new Promise((resolve, reject) => {
     client.deleteItem(query, (err, result) => {
-      if(err){
+      if (err) {
         console.log("failed to delete item")
         reject(err)
       }
@@ -31,10 +31,10 @@ async function deleteItem(query){
   })
 }
 
-async function get(query){
+async function get(query) {
   return new Promise((resolve, reject) => {
     client.getItem(query, (err, result) => {
-      if(err){
+      if (err) {
         console.log("failed to get item")
         reject(err)
       }
@@ -45,10 +45,10 @@ async function get(query){
   })
 }
 
-async function scan(query){
+async function scan(query) {
   return new Promise((resolve, reject) => {
     client.scan(query, (err, result) => {
-      if(err){
+      if (err) {
         console.log("failed to get item")
         reject(err)
       }
@@ -61,7 +61,20 @@ async function scan(query){
   })
 }
 
-async function deleteRegistration(sn){
+async function update(query) {
+  return new Promise((resolve, reject) => {
+    client.updateItem(query, (err, result) => {
+      if (err) {
+        console.log("failed to update item")
+        reject(err)
+      }
+      console.log(`item updated`)
+      resolve(result)
+    })
+  })
+}
+
+async function deleteRegistration(sn) {
   let query = {
     TableName: registrationsSchema.table.TableName,
     Key: {
@@ -76,18 +89,18 @@ async function deleteRegistration(sn){
       let result = await deleteItem(query)
       console.log(result)
       return deleteDevice(device.id)
-    } catch(err){
+    } catch (err) {
       console.log(err)
       throw err
     }
-  } catch(err) {
+  } catch (err) {
     console.log(err)
     throw err
   }
 
 }
 
-async function deleteDevice(id){
+async function deleteDevice(id) {
   let query = {
     TableName: deviceSchema.table.TableName,
     Key: {
@@ -99,27 +112,26 @@ async function deleteDevice(id){
   return deleteItem(query)
 }
 
-async function addDevice(device){
-  const id = device.id || device.device_id
+async function addDevice(device) {
   const query = {
     Item: {
       [deviceSchema.table.AttributeDefinitions[0].AttributeName]: {
-        S: id
-      },
-      "IP": {
-        S: device.ip
+        S: device.id
       },
       "OFFSET": {
         S: device.offset
       },
       "CLEANUP": {
-        S: device.cleanup
+        BOOL: device.cleanup
       },
       "FPS": {
         S: device.fps
       },
       "RULES": {
         S: device.rules
+      },
+      "RECORD": {
+        S: device.record
       }
     },
     ReturnConsumedCapacity: "TOTAL",
@@ -128,35 +140,37 @@ async function addDevice(device){
   return put(query)
 }
 
-async function registerDevice(params, id){
+async function registerDevice(params) {
   const query = {
     Item: {
       [registrationsSchema.table.AttributeDefinitions[0].AttributeName]: {
         S: params.sn
       },
       "ID": {
-        S: id
+        S: params.id
       },
       "OWNER": {
         S: params.owner
+      },
+      "IP": {
+        S: params.ip
+      },
+      "CHANNELS": {
+        S: params.channels
       }
     },
     ReturnConsumedCapacity: "TOTAL",
     TableName: registrationsSchema.table.TableName
   }
   try {
-    let result = await put(query)
-    if(params.sn !== "0"){
-      result = await addDevice({...deviceSchema.defaultConfig, id, ip: params.ip})
-    }
-    return result
-  } catch(err){
+    return await put(query)
+  } catch (err) {
     console.log(err)
     throw err
   }
 }
 
-async function getRegistration(sn){
+async function getRegistration(sn) {
   let query = {
     TableName: registrationsSchema.table.TableName,
     Key: {
@@ -168,7 +182,7 @@ async function getRegistration(sn){
   return get(query)
 }
 
-async function getRegistrations(owner){
+async function getRegistrations(owner) {
   let query = {
     TableName: registrationsSchema.table.TableName,
     ExpressionAttributeNames: {
@@ -179,32 +193,44 @@ async function getRegistrations(owner){
       ":owner": {
         S: owner
       }
-    },
-    ProjectionExpression: "ID"
+    }
   }
   return scan(query)
 }
 
-async function getDevice(id){
+async function getDevice(id) {
   let query = {
     TableName: deviceSchema.table.TableName,
     Key: {
       [deviceSchema.table.AttributeDefinitions[0].AttributeName]: {
         S: id
       }
-    },
+    }
   }
   return get(query)
 }
 
-async function updateDevice(device){
+async function updateDevice(device) {
   try {
-    let result = await deleteDevice(device.device_id)
-    console.log(`old device ${device.device_id} deleted - ${JSON.stringify(result)}`)
+    let result = await deleteDevice(device.id)
+    console.log(`old device ${device.id} deleted - ${JSON.stringify(result)}`)
     result = await addDevice(device)
-    console.log(`new device ${device.device_id} added - ${JSON.stringify(result)}`)
+    console.log(`new device ${device.id} added - ${JSON.stringify(result)}`)
     return result
-  } catch(err){
+  } catch (err) {
+    console.log(err)
+    throw err
+  }
+}
+
+async function updateRegistration(registration) {
+  try {
+    let result = await deleteRegistration(registration.sn)
+    console.log(`old device ${registration.id} deleted - ${JSON.stringify(result)}`)
+    result = await registerDevice(registration)
+    console.log(`new device ${registration.id} added - ${JSON.stringify(result)}`)
+    return result
+  } catch (err) {
     console.log(err)
     throw err
   }
@@ -216,31 +242,31 @@ async function init(config) {
     client = new AWS.DynamoDB()
 
     let tables = await listTables()
-    if(!tables || tables.length === 0){
+    if (!tables || tables.length === 0) {
       let res = await createTable(deviceSchema.table)
       console.log(res)
       res = await createTable(registrationsSchema.table)
       console.log(res)
     }
-    if(tables.indexOf(deviceSchema.table.TableName) === -1){
+    if (tables.indexOf(deviceSchema.table.TableName) === -1) {
       let res = await createTable(deviceSchema.table)
       console.log(res)
     }
-    if(tables.indexOf(registrationsSchema.table.TableName) === -1){
+    if (tables.indexOf(registrationsSchema.table.TableName) === -1) {
       let res = await createTable(registrationsSchema.table)
       console.log(res)
     }
     console.log("DB initiated")
-  } catch(err){
+  } catch (err) {
     console.log(err)
     throw err
   }
 }
 
-async function listTables(){
+async function listTables() {
   return new Promise((resolve, reject) => {
     client.listTables({}, (err, result) => {
-      if(err){
+      if (err) {
         console.log("Failed to list tables", err)
         reject(err)
       }
@@ -262,13 +288,18 @@ async function createTable(schema) {
   })
 }
 
-function parseOutput(output){
+function parseOutput(output) {
   let json = {}
-  if(output.Item === undefined){
+  if (output.Item === undefined) {
     return false
   }
   Object.keys(output.Item).forEach(key => {
-    json[key.toLowerCase()] = output.Item[key].S
+    let field = output.Item[key]
+    let type = Object.keys(field)[0]
+    if(key === "DEVICE_ID"){
+      key = "id"
+    }
+    json[key.toLowerCase()] = field[type]
   })
   return json
 }
@@ -279,6 +310,7 @@ module.exports = {
   getRegistration,
   registerDevice,
   deleteRegistration,
+  updateRegistration,
   deleteDevice,
   updateDevice,
   getRegistrations

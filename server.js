@@ -8,8 +8,9 @@ const {
   getRegistration,
   registerDevice,
   deleteRegistration,
+  updateRegistration,
   updateDevice,
-  getRegistrations
+  getRegistrations, deleteDevice
 } = require("./aws-wrapper")
 
 const app = express()
@@ -40,8 +41,9 @@ async function start(){
       if(registration.id){
         let msg = `device ${registration.id} already registered`
         console.log(msg)
-        res.json({registration_id: registration.id})
-      } else {
+        res.json({id: registration.id})
+      }
+      else {
         let lastRegistration = await getRegistration("0")
         let newId = "1"
         if(lastRegistration) {
@@ -49,28 +51,30 @@ async function start(){
         }
 
         try {
-          let result = await registerDevice(req.body, newId.toString())
+          let result = await registerDevice( {...req.body, id: newId.toString()})
+          await registerDevice({sn: "0", owner: "none", ip:"n/a", channels: "0", id: newId.toString()})
           console.log(result)
-          res.json({registration_id: newId.toString()})
+          res.json({id: newId.toString()})
         } catch(err){
           console.log(err)
           res.status(500).json({error: "failed to register device"})
-          return
-        }
-
-        try {
-          let updatedId = await registerDevice({sn: "0", owner: "none"}, newId.toString())
-          res.json({msg: `new device registered, id (${newId}) - ${updatedId}`})
-        } catch(err){
-          console.log(err)
-          res.status(500).json({error: "failed to update last device"})
-          return
         }
       }
     } catch(err){
       console.log(err)
       res.status(500).json({error: "failed to get device"})
-      return err
+    }
+  })
+
+  app.post("/api/registration/update", async (req, res) => {
+    console.log("got sn", req.body)
+    try {
+      let result = await updateRegistration(req.body)
+      console.log(result)
+      res.json({msg: `registration updates`})
+    } catch(err){
+      console.log(err)
+      res.status(500).json({error: "failed to update registration"})
     }
   })
 
@@ -88,7 +92,12 @@ async function start(){
   app.get('/api/device/:id', async (req, res) => {
     try {
       let deviceConfig = await getDevice(req.params.id)
-      res.json(deviceConfig)
+      if(!deviceConfig){
+        res.status(404).json({msg: "no config for this id"})
+      } else {
+        res.status(200).json(deviceConfig)
+      }
+
     } catch(err){
       console.log(err)
       res.status(500).json({error: "failed to get device"})
@@ -98,9 +107,9 @@ async function start(){
   app.get('/api/devices', async (req, res) => {
     console.log("GET DEVICES")
     try {
-      let deviceIds = await getRegistrations("eco")
-      console.log(deviceIds)
-      res.json(deviceIds)
+      let devices = await getRegistrations("echo")
+      console.log(devices)
+      res.json(devices)
     } catch(err){
       console.log(err)
       res.status(500).json({error: "failed to get devices"})
@@ -119,6 +128,20 @@ async function start(){
     }
 
   })
+
+  app.delete('/api/device/delete/:id', async (req, res) => {
+    try {
+      let result = await deleteDevice(req.params.id)
+      let msg = `device deleted`
+      console.log(msg + "-" + JSON.stringify(result))
+      res.json({msg})
+    } catch(err) {
+      console.log(err)
+      res.status(500).json({error: "failed to delete device"})
+    }
+
+  })
+
 
   app.listen(port, () =>
     console.log(`Listening on port ${port}`)

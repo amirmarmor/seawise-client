@@ -4,7 +4,7 @@ import {selectDevice} from "../../features/device/deviceSlice"
 import {Button, Card, Col, Container, Form, Row, Alert} from "react-bootstrap"
 import RuleRow from "./rules"
 
-function Configuration(props) {
+function ConfigForm(props) {
   const [currentConfig, setConfig] = useState()
 
   useEffect(() => {
@@ -82,7 +82,7 @@ function Configuration(props) {
     if (props.current) {
       return <Form onSubmit={(e) => props.handleSubmit(e, currentConfig)}>
         <Row>
-          <Col className="px-1" md="5">
+          <Col className="px-1" md="4">
             <Form.Group>
               <label>Offset</label>
               <Form.Control
@@ -94,18 +94,7 @@ function Configuration(props) {
               />
             </Form.Group>
           </Col>
-          <Col className="px-1" md="5">
-            <label>Clean up</label>
-            < br/>
-            <input
-              name={"cleanup"}
-              id={"cleanup"}
-              type={"checkbox"}
-              checked={currentConfig.cleanup === 'true'}
-              onChange={e => handleChange(e)}
-            />
-          </Col>
-          <Col className="px-1" md="5">
+          <Col className="px-1" md="4">
             <Form.Group>
               <label>FPS</label>
               <Form.Control
@@ -116,6 +105,17 @@ function Configuration(props) {
                 onChange={e => handleChange(e)}
               />
             </Form.Group>
+          </Col>
+          <Col className="px-1" md="4">
+            <label>Clean up</label>
+            < br/>
+            <input
+              name={"cleanup"}
+              id={"cleanup"}
+              type={"checkbox"}
+              checked={currentConfig.cleanup}
+              onChange={e => handleChange(e)}
+            />
           </Col>
         </Row>
         <Row>
@@ -155,4 +155,4 @@ function Configuration(props) {
   )
 }
 
-export default Configuration
+export default ConfigForm

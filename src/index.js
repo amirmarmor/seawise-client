@@ -21,7 +21,7 @@ const renderApp = () =>
       <BrowserRouter>
         <Switch>
           <Route path="/admin" render={(props) => <AdminLayout {...props} />}/>
-          <Redirect from="/" to="/admin/devices"/>
+          <Redirect from="/" to="/admin/configuration"/>
         </Switch>
       </BrowserRouter>
     </Provider>,

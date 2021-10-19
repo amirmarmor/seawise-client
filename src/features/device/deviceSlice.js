@@ -38,14 +38,16 @@ export const getDevicesAsync = () => {
 }
 
 export const getConfigAsync = (id) => {
-  return async (dispatch) => {
-    try {
-      const result = await fetch(`http://${api}/api/device/${id}`)
-      const config = await result.json()
-      dispatch(updateConfig(config))
-      dispatch(updateCurrent(id))
-    } catch (err) {
-      console.log(err)
+  return async (dispatch, state) => {
+    if(state.current !== id) {
+      try {
+        const result = await fetch(`http://${api}/api/device/${id}`)
+        const config = await result.json()
+        dispatch(updateConfig(config))
+        dispatch(updateCurrent(id))
+      } catch (err) {
+        console.log(err)
+      }
     }
   }
 }

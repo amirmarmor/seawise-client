@@ -1,19 +1,55 @@
 import React from "react"
 import {NavLink, useLocation} from "react-router-dom"
-
 import {Nav} from "react-bootstrap"
+import {useDispatch, useSelector} from "react-redux"
+import {
+  getConfigAsync,
+  selectDevices,
+  selectCurrent
+} from "../../features/device/deviceSlice"
+import routes from "../../routes"
 
 function Sidebar({color, image, routes}) {
+  const devices = useSelector(selectDevices)
+  const current = useSelector(selectCurrent)
+  const dispatch = useDispatch()
+
   const location = useLocation()
+
   const activeRoute = (routeName) => {
     return location.pathname.indexOf(routeName) > -1 ? "active" : ""
   }
+
+  function handleClick(id) {
+    dispatch(getConfigAsync(id))
+  }
+
+  function renderDevices() {
+    if (devices !== undefined) {
+      console.log()
+      return devices.map((device, key) =>
+        <li
+          className={
+            device.id === current ? "active" : ""
+          }
+          key={`device-${key}`}
+          onClick={() => handleClick(device.id)}
+        >
+          <p className="nav-link"
+             style={{cursor: "pointer"}}
+          >Device - {device.id} ({device.ip})</p>
+        </li>
+      )
+    }
+    return ""
+  }
+
   return (
     <div className="sidebar" data-image={image} data-color={color}>
       <div
         className="sidebar-background"
         style={{
-          backgroundImage: "url(" + image + ")",
+          backgroundImage: "url(" + image + ")"
         }}
       />
       <div className="sidebar-wrapper">
@@ -34,29 +70,7 @@ function Sidebar({color, image, routes}) {
           </a>
         </div>
         <Nav>
-          {routes.map((prop, key) => {
-            if (!prop.redirect)
-              return (
-                <li
-                  className={
-                    prop.upgrade
-                      ? "active active-pro"
-                      : activeRoute(prop.layout + prop.path)
-                  }
-                  key={key}
-                >
-                  <NavLink
-                    to={prop.layout + prop.path}
-                    className="nav-link"
-                    activeClassName="active"
-                  >
-                    <i className={prop.icon}/>
-                    <p>{prop.name}</p>
-                  </NavLink>
-                </li>
-              )
-            return null
-          })}
+          {renderDevices()}
         </Nav>
       </div>
     </div>
