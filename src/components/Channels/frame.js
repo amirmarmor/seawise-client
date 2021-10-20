@@ -15,7 +15,6 @@ function Frame(props) {
   const overlayStyle = {
     display: overlay ? "block" : "none",
     position: "absolute",
-    border: "1px solid blue",
     width: "10%",
     height: "50px",
     top: "0",
@@ -26,7 +25,6 @@ function Frame(props) {
   const wrapperStyle = {
     display: "inline-block",
     position: "relative",
-    border: "1px solid red",
     width: "49.9%",
   }
 

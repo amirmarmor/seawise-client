@@ -1,7 +1,7 @@
 import {createSlice} from "@reduxjs/toolkit"
 
-const initialState = {id: 0}
-const api = `localhost:5000`
+const initialState = {}
+const api = process.env.REACT_APP_API_HOST || ``
 
 export const deviceSlice = createSlice({
   name: 'device',
@@ -29,7 +29,7 @@ export const deviceSlice = createSlice({
 export const getDevicesAsync = () => {
   return async (dispatch) => {
     try {
-      const result = await fetch(`http://${api}/api/devices`)
+      const result = await fetch(`${api}/api/devices`)
       const json = await result.json()
       dispatch(updateDevices(json))
     } catch (err) {
@@ -42,7 +42,7 @@ export const getConfigAsync = (id) => {
   return async (dispatch, state) => {
     if (state.current !== id) {
       try {
-        const result = await fetch(`http://${api}/api/device/${id}`)
+        const result = await fetch(`${api}/api/device/${id}`)
         const config = await result.json()
         dispatch(updateConfig(config))
         dispatch(updateCurrent(id))
@@ -56,7 +56,7 @@ export const getConfigAsync = (id) => {
 export const getRealtimeAsync = (id) => {
   return async (dispatch) => {
     try {
-      const result = await fetch(`http://${api}/api/realtime/${id}`)
+      const result = await fetch(`${api}/api/realtime/${id}`)
       const realtime = await result.json()
       dispatch(updateRealtime(realtime))
     } catch (err) {
@@ -65,15 +65,16 @@ export const getRealtimeAsync = (id) => {
   }
 }
 
-export const setConfigAsync = (config) => {
+export const setConfigAsync = (config, id) => {
+  id = parseInt(id)
   return async (dispatch) => {
     try {
-      await fetch(`http://${api}/api/device`, {
+      await fetch(`${api}/api/device`, {
         method: "POST",
         headers: {
           "Content-type": "application/json"
         },
-        body: JSON.stringify(config)
+        body: JSON.stringify({...config, id})
       })
       dispatch(configUpdated(true))
     } catch (err) {

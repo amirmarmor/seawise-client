@@ -1,5 +1,5 @@
 #!/bin/bash
-
+sudo rm -rf docker
 docker-compose down --remove-orphans
 if [ "$1" == 'build' ]
 then

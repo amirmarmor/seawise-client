@@ -16,14 +16,21 @@ const {
 const app = express()
 
 const port = process.env.PORT || 5000
-const region = process.env.AWS_REGION || "us-west-2"
-const endpoint = process.env.ENDPOINT || "http://localhost:8000"
+const region = process.env.AWS_REGION || "us-east-1"
+const endpoint = process.env.ENDPOINT || ""
 const config = {region, endpoint}
-
+const defaultDeviceConfig = {
+  fps: 30,
+  offset: 0,
+  rules: "[]",
+  cleanup: true,
+  record: false,
+}
 start()
 
 async function start(){
   try {
+    console.log(`CONFIG = ${JSON.stringify(config)}`)
     await init(config)
   } catch(err){
     console.log(err)
@@ -33,6 +40,9 @@ async function start(){
   app.use(bodyParser.json())
   app.use(express.static(path.join(__dirname, 'build')))
 
+  app.get("/admin/*", (req, res) => {
+    res.redirect("/")
+  })
 
   app.post("/api/register", async (req, res) => {
     try {
@@ -40,19 +50,19 @@ async function start(){
       if(registration.id){
         let msg = `device ${registration.id} already registered`
         console.log(msg)
-        res.json({id: registration.id})
+        res.json({id: parseInt(registration.id)})
       }
       else {
         let lastRegistration = await getRegistration("0")
-        let newId = "1"
+        let newId = 1
         if(lastRegistration) {
           newId = parseInt(lastRegistration.id) + 1
         }
 
         try {
-          await registerDevice( {...req.body, id: newId.toString()})
-          await registerDevice({sn: "0", owner: "none", ip:"n/a", channels: "0", id: newId.toString()})
-          res.json({id: newId.toString()})
+          await registerDevice( {...req.body, id: newId})
+          await registerDevice({sn: "0", owner: "none", ip:"n/a", channels: 0, id: newId})
+          res.json({id: newId})
         } catch(err){
           console.log(err)
           res.status(500).json({error: "failed to register device"})
@@ -85,14 +95,18 @@ async function start(){
   })
 
   app.get('/api/device/:id', async (req, res) => {
-    try {
-      let deviceConfig = await getDevice(req.params.id)
-      if(!deviceConfig){
-        res.status(404).json({msg: "no config for this id"})
-      } else {
-        res.status(200).json(deviceConfig)
-      }
 
+    try {
+      let id = parseInt(req.params.id)
+      let deviceConfig = await getDevice(id)
+      if(!deviceConfig){
+        deviceConfig = defaultDeviceConfig
+      } else {
+        deviceConfig.fps = parseInt(deviceConfig.fps)
+        deviceConfig.offset = parseInt(deviceConfig.offset)
+        deviceConfig.id = parseInt(deviceConfig.id)
+      }
+      res.status(200).json(deviceConfig)
     } catch(err){
       console.log(err)
       res.status(500).json({error: "failed to get device"})

@@ -67,18 +67,10 @@ async function deleteRegistration(sn) {
     }
   }
   try {
-    let device = await getRegistration(sn)
-    try {
-      await deleteItem(query)
-      return deleteDevice(device.id)
-    } catch (err) {
-      console.log(err)
-    }
+    await deleteItem(query)
   } catch (err) {
     console.log(err)
-    throw err
   }
-
 }
 
 async function deleteDevice(id) {
@@ -86,35 +78,34 @@ async function deleteDevice(id) {
     TableName: deviceSchema.table.TableName,
     Key: {
       [deviceSchema.table.AttributeDefinitions[0].AttributeName]: {
-        S: id
+        N: id.toString()
       }
     }
   }
   return deleteItem(query)
 }
 
-function toBool(string){
-  if(typeof string === 'boolean'){
+function toBool(string) {
+  if (typeof string === 'boolean') {
     return string
   }
   return string === "true"
 }
 
 async function addDevice(device) {
-
   const query = {
     Item: {
       [deviceSchema.table.AttributeDefinitions[0].AttributeName]: {
-        S: device.id
+        N: device.id.toString()
       },
       "OFFSET": {
-        S: device.offset
+        N: device.offset.toString()
       },
       "CLEANUP": {
         BOOL: toBool(device.cleanup)
       },
       "FPS": {
-        S: device.fps
+        N: device.fps.toString()
       },
       "RULES": {
         S: device.rules
@@ -136,7 +127,7 @@ async function registerDevice(params) {
         S: params.sn
       },
       "ID": {
-        S: params.id
+        N: params.id.toString()
       },
       "OWNER": {
         S: params.owner
@@ -145,7 +136,7 @@ async function registerDevice(params) {
         S: params.ip
       },
       "CHANNELS": {
-        S: params.channels
+        N: params.channels.toString()
       }
     },
     ReturnConsumedCapacity: "TOTAL",
@@ -187,7 +178,7 @@ async function getRegistrations(owner) {
   return scan(query)
 }
 
-async function getRegistrationById(id){
+async function getRegistrationById(id) {
   let query = {
     TableName: registrationsSchema.table.TableName,
     ExpressionAttributeNames: {
@@ -197,10 +188,10 @@ async function getRegistrationById(id){
     FilterExpression: "#id = :id and not (#sn = :zero)",
     ExpressionAttributeValues: {
       ":id": {
-        S: id
+        N: id
       },
       ":zero": {
-        S: "0"
+        N: "0"
       }
     }
   }
@@ -212,7 +203,7 @@ async function getDevice(id) {
     TableName: deviceSchema.table.TableName,
     Key: {
       [deviceSchema.table.AttributeDefinitions[0].AttributeName]: {
-        S: id
+        N: id.toString()
       }
     }
   }
@@ -249,12 +240,7 @@ async function init(config) {
       await createTable(deviceSchema.table)
       await createTable(registrationsSchema.table)
     }
-    if (tables.indexOf(deviceSchema.table.TableName) === -1) {
-      await createTable(deviceSchema.table)
-    }
-    if (tables.indexOf(registrationsSchema.table.TableName) === -1) {
-      await createTable(registrationsSchema.table)
-    }
+
     console.log("DB initiated")
   } catch (err) {
     console.log(err)
@@ -295,8 +281,9 @@ function parseOutput(output) {
   Object.keys(output.Item).forEach(key => {
     let field = output.Item[key]
     let type = Object.keys(field)[0]
-    if(key === "DEVICE_ID"){
+    if (key === "DEVICE_ID") {
       key = "id"
+      field[type] = parseInt(field[type])
     }
     json[key.toLowerCase()] = field[type]
   })

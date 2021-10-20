@@ -1,13 +1,13 @@
 const table = {
   AttributeDefinitions: [
     {
-      AttributeName: "DEVICE_ID",
-      AttributeType: "S"
+      AttributeName: "ID",
+      AttributeType: "N"
     }
   ],
   KeySchema: [
     {
-      AttributeName: "DEVICE_ID",
+      AttributeName: "ID",
       KeyType: "HASH"
     }
   ],
@@ -18,14 +18,6 @@ const table = {
   }
 }
 
-const defaultConfig = {
-  offset: "0",
-  cleanup: "true",
-  fps: "30",
-  rules: "[]"
-}
-
 module.exports = {
-  table,
-  defaultConfig
+  table
 }

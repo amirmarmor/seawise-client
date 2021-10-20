@@ -19,7 +19,7 @@ function Configuration() {
 
   function handleSubmit(e, config) {
     e.preventDefault()
-    dispatch(setConfigAsync(config))
+    dispatch(setConfigAsync(config, current))
   }
 
 
