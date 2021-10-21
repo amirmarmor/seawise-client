@@ -35,6 +35,7 @@ async function get(query) {
       if (err) {
         console.log("failed to get item")
         reject(err)
+        return
       }
       result = parseOutput(result)
       resolve(result)
@@ -232,8 +233,8 @@ async function updateRegistration(registration) {
 
 async function init(config) {
   try {
+    client = new AWS.DynamoDB({region: config.region})
     AWS.config.update(config)
-    client = new AWS.DynamoDB()
 
     let tables = await listTables()
     if (!tables || tables.length === 0) {

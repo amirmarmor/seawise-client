@@ -1,13 +1,13 @@
 const table = {
   AttributeDefinitions: [
     {
-      AttributeName: "ID",
+      AttributeName: "DEVICE_ID",
       AttributeType: "N"
     }
   ],
   KeySchema: [
     {
-      AttributeName: "ID",
+      AttributeName: "DEVICE_ID",
       KeyType: "HASH"
     }
   ],

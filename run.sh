@@ -1,5 +1,6 @@
 #!/bin/bash
 sudo rm -rf docker
+echo "deleted old db"
 docker-compose down --remove-orphans
 if [ "$1" == 'build' ]
 then

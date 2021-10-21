@@ -98,7 +98,14 @@ async function start(){
 
     try {
       let id = parseInt(req.params.id)
-      let deviceConfig = await getDevice(id)
+      console.log("GOT ID - ", id)
+      let deviceConfig
+      try {
+        deviceConfig = await getDevice(id)
+      } catch(err){
+        console.log(err)
+        deviceConfig = false
+      }
       if(!deviceConfig){
         deviceConfig = defaultDeviceConfig
       } else {
