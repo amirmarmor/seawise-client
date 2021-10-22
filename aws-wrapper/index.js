@@ -1,4 +1,5 @@
 const AWS = require("aws-sdk")
+const logger = require("../logger")
 
 const deviceSchema = require("./deviceSchema")
 const registrationsSchema = require("./registrationsSchema")
@@ -9,7 +10,7 @@ async function put(query) {
   return new Promise((resolve, reject) => {
     client.putItem(query, (err, result) => {
       if (err) {
-        console.log("failed to put item")
+        logger.log("failed to put item")
         reject(err)
       }
       resolve(result)
@@ -21,7 +22,7 @@ async function deleteItem(query) {
   return new Promise((resolve, reject) => {
     client.deleteItem(query, (err, result) => {
       if (err) {
-        console.log("failed to delete item")
+        logger.log("failed to delete item")
         reject(err)
       }
       resolve(result)
@@ -33,7 +34,7 @@ async function get(query) {
   return new Promise((resolve, reject) => {
     client.getItem(query, (err, result) => {
       if (err) {
-        console.log("failed to get item")
+        logger.log("failed to get item")
         reject(err)
         return
       }
@@ -47,12 +48,13 @@ async function scan(query) {
   return new Promise((resolve, reject) => {
     client.scan(query, (err, result) => {
       if (err) {
-        console.log("failed to get item")
+        logger.log("failed to get item")
         reject(err)
       }
       let items = result.Items.map(Item => {
         return parseOutput({Item})
       })
+      logger.log(items)
       resolve(items)
     })
   })
@@ -70,7 +72,7 @@ async function deleteRegistration(sn) {
   try {
     await deleteItem(query)
   } catch (err) {
-    console.log(err)
+    logger.log(err)
   }
 }
 
@@ -146,7 +148,7 @@ async function registerDevice(params) {
   try {
     return await put(query)
   } catch (err) {
-    console.log(err)
+    logger.log(err)
     throw err
   }
 }
@@ -183,20 +185,17 @@ async function getRegistrationById(id) {
   let query = {
     TableName: registrationsSchema.table.TableName,
     ExpressionAttributeNames: {
-      "#id": "ID",
-      '#sn': "DEVICE_SERIAL_NUMBER"
+      "#id": "ID"
     },
-    FilterExpression: "#id = :id and not (#sn = :zero)",
+    FilterExpression: "#id = :id",
     ExpressionAttributeValues: {
       ":id": {
         N: id
       },
-      ":zero": {
-        N: "0"
-      }
     }
   }
-  return scan(query)
+  let result = await scan(query)
+  return result.filter(reg => reg.sn !== 0)
 }
 
 async function getDevice(id) {
@@ -216,7 +215,7 @@ async function updateDevice(device) {
     await deleteDevice(device.id)
     return await addDevice(device)
   } catch (err) {
-    console.log(err)
+    logger.log(err)
     throw err
   }
 }
@@ -226,7 +225,7 @@ async function updateRegistration(registration) {
     await deleteRegistration(registration.sn)
     return await registerDevice(registration)
   } catch (err) {
-    console.log(err)
+    logger.log(err)
     throw err
   }
 }
@@ -247,9 +246,9 @@ async function init(config) {
       await createTable(registrationsSchema.table)
     }
 
-    console.log("DB initiated")
+    logger.log("DB initiated")
   } catch (err) {
-    console.log(err)
+    logger.log(err)
     throw err
   }
 }
@@ -258,7 +257,7 @@ async function listTables() {
   return new Promise((resolve, reject) => {
     client.listTables({}, (err, result) => {
       if (err) {
-        console.log("Failed to list tables", err)
+        logger.log("Failed to list tables", err)
         reject(err)
       }
       resolve(result.TableNames)
@@ -270,10 +269,10 @@ async function createTable(schema) {
   return new Promise((resolve, reject) => {
     client.createTable(schema, (err, result) => {
       if (err) {
-        console.log("Failed to create table - ", err)
+        logger.log("Failed to create table - ", err)
         reject(err)
       }
-      console.log(`${schema.TableName} create!`)
+      logger.log(`${schema.TableName} create!`)
       resolve(result)
     })
   })

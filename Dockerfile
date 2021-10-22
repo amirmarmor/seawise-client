@@ -6,7 +6,9 @@ COPY package-lock.json ./
 RUN npm install
 
 COPY . ./
+RUN rm -rf build
 RUN npm run build
 
+ENV VERBOSE=5
 CMD ["node", "server.js"]
 
