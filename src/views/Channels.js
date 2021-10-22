@@ -2,12 +2,13 @@ import React from "react"
 import {Container} from "react-bootstrap"
 import {useSelector} from "react-redux"
 import {
-  selectConfig,
+  selectConfig, selectCurrent
 } from "../features/device/deviceSlice"
 import Recording from '../components/Channels/recording'
 
 function Channels() {
   const config = useSelector(selectConfig)
+  const current = useSelector(selectCurrent)
 
   function getRules() {
     if(config !== undefined){
@@ -18,7 +19,7 @@ function Channels() {
 
   return (
     <Container fluid>
-    {config !== undefined ? <Recording rules={getRules()} id={config.id} config={config}/> : ""}
+    {config !== undefined ? <Recording rules={getRules()} id={current} config={config}/> : ""}
     </Container>
   )
 }

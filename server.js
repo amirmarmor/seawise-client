@@ -16,7 +16,7 @@ const {
 const app = express()
 
 const port = process.env.PORT || 5000
-const region = process.env.AWS_REGION || "us-east-1"
+const region = process.env.REGION || "us-east-1"
 const endpoint = process.env.ENDPOINT || ""
 const config = {region, endpoint}
 const defaultDeviceConfig = {
@@ -40,11 +40,20 @@ async function start(){
   app.use(bodyParser.json())
   app.use(express.static(path.join(__dirname, 'build')))
 
+  app.get("/health", (req, res) => {
+    res.send("OK")
+  })
+
   app.get("/admin/*", (req, res) => {
     res.redirect("/")
   })
 
   app.post("/api/register", async (req, res) => {
+    let sn = req.body.sn
+    if(sn === undefined || !sn || sn === ""){
+      res.status(500).json({error: "missing serial number"})
+    }
+
     try {
       let registration = await getRegistration(req.body.sn)
       if(registration.id){

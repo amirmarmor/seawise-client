@@ -5,15 +5,13 @@ import {useSelector, useDispatch} from "react-redux"
 import {
   getRealtimeAsync,
   selectRealtime,
-  selectCurrent,
   setConfigAsync,
 } from "../../features/device/deviceSlice"
 
 function Recording(props) {
   const realtime = useSelector(selectRealtime)
-  const current = useSelector(selectCurrent)
   const dispatch = useDispatch()
-  const init = useRef({id: props.id, interval: null})
+  const init = useRef({id: props.id, interval: 0})
   let recordingColor
   let recordingMsg
 
@@ -106,7 +104,7 @@ function Recording(props) {
     } else if(recordingColor === 'red'){
       body.record = false
     }
-    dispatch(setConfigAsync(body, current))
+    dispatch(setConfigAsync(body, props.id))
   }
 
   refresh()

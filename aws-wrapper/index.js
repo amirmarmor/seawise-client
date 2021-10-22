@@ -233,8 +233,13 @@ async function updateRegistration(registration) {
 
 async function init(config) {
   try {
-    client = new AWS.DynamoDB({region: config.region})
-    AWS.config.update(config)
+    if(config.endpoint !== ""){
+      AWS.config.update(config)
+      client = new AWS.DynamoDB()
+    } else {
+      client = new AWS.DynamoDB({region: config.region})
+    }
+
 
     let tables = await listTables()
     if (!tables || tables.length === 0) {
