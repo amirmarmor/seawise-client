@@ -43,7 +43,7 @@ async function start(){
   app.use(bodyParser.json())
   app.use(express.static(path.join(__dirname, 'build')))
 
-  app.get("/health", (req, res) => {
+  app.get("/admin/health", (req, res) => {
     res.send("OK")
   })
 

@@ -115,7 +115,6 @@ function Recording(props) {
     height: "100%",
     textAlign: "center",
     position: "relative",
-    border: "3px solid purple"
   }
 
   const recordingStyle = {

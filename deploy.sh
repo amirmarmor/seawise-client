@@ -4,6 +4,8 @@ log(){
 }
 
 log "Building seawise-backend"
+rm -rf ./backend/node_modules
+rm -rf ./client/node_modules
 docker build -t seawise-manager .
 
 log "AWS login"
