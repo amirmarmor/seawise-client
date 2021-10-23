@@ -47,11 +47,6 @@ async function start(){
     res.send("OK")
   })
 
-  app.get("/admin/*", (req, res) => {
-    logger.debug(req.url)
-    res.redirect("/")
-  })
-
   app.post("/api/register", async (req, res) => {
     logger.debug(req.url)
     let sn = req.body.sn

@@ -85,7 +85,7 @@
   "main": "public/server.js",
   "scripts": {
     "start": "node scripts/start.js",
-    "build": "node scripts/build.js",
+    "build": "BUILD_PATH='./build/admin/' node scripts/build.js",
     "test": "node scripts/test.js",
     "dev": "nodemon server.js",
     "compile:scss": "node-sass src/assets/scss/light-bootstrap-dashboard-react.scss src/assets/css/light-bootstrap-dashboard-react.css",
