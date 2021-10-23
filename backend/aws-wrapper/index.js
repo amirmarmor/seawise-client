@@ -194,8 +194,11 @@ async function getRegistrationById(id) {
       },
     }
   }
+  //TODO: fix id numerator locate not in table
   let result = await scan(query)
-  return result.filter(reg => reg.sn !== 0)
+  let h = result.filter(reg => reg.device_serial_number !== "0")
+  logger.debug(`CHECK REVISION new - ${JSON.stringify(h)}`)
+  return h
 }
 
 async function getDevice(id) {

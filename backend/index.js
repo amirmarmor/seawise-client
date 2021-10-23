@@ -65,12 +65,12 @@ async function start(){
         let lastRegistration = await getRegistration("0")
         let newId = 1
         if(lastRegistration) {
-          newId = parseInt(lastRegistration.id) + 1
+          newId = parseInt(lastRegistration.channels) + 1
         }
 
         try {
           await registerDevice( {...req.body, id: newId})
-          await registerDevice({sn: "0", owner: "none", ip:"n/a", channels: 0, id: newId})
+          await registerDevice({sn: "0", owner: "none", ip:"n/a", channels: newId, id: 9999})
           res.json({id: newId})
         } catch(err){
           logger.warn(err)
