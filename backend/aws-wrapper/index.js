@@ -136,7 +136,7 @@ async function registerDevice(params) {
         S: params.owner
       },
       "IP": {
-        S: params.ip
+        S: JSON.stringify(params.ip)
       },
       "CHANNELS": {
         N: params.channels.toString()
@@ -197,7 +197,6 @@ async function getRegistrationById(id) {
   //TODO: fix id numerator locate not in table
   let result = await scan(query)
   let h = result.filter(reg => reg.device_serial_number !== "0")
-  logger.debug(`CHECK REVISION new - ${JSON.stringify(h)}`)
   return h
 }
 

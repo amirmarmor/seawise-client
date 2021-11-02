@@ -10,10 +10,14 @@ import "./assets/css/animate.min.css"
 import "./assets/scss/light-bootstrap-dashboard-react.scss?v=2.0.0"
 import "./assets/css/demo.css"
 import "@fortawesome/fontawesome-free/css/all.min.css"
-import {getDevicesAsync} from "./features/device/deviceSlice"
+import {getDevicesAsync, getRealtimeAsync} from "./features/device/deviceSlice"
 
 const store = configureStore()
 store.dispatch(getDevicesAsync())
+let interval = setInterval(()=>{
+  console.log("getting realtime")
+  store.dispatch(getRealtimeAsync())
+}, 5000)
 
 const renderApp = () =>
   render(

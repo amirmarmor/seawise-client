@@ -28,7 +28,7 @@ function Sidebar({color, image, routes}) {
         >
           <p className="nav-link"
              style={{cursor: "pointer"}}
-          >Device - {device.id} ({device.ip})</p>
+          >Device - {device.id}</p>
         </li>
       )
     }

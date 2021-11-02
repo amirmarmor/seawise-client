@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@auth0/auth0-react": "^1.8.0",
     "@babel/core": "7.12.3",
     "@fortawesome/fontawesome-free": "^5.15.4",
     "@pmmmwh/react-refresh-webpack-plugin": "0.4.3",

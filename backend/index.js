@@ -3,6 +3,9 @@ const express = require('express')
 const path = require('path')
 const cors = require('cors')
 const bodyParser = require('body-parser')
+const webSockerServer = require('websocket').server
+const http = require('http')
+
 const {
   init,
   getDevice,
@@ -17,6 +20,7 @@ const {
 const app = express()
 
 const port = process.env.PORT || 5000
+const wsPort = process.env.WSPORT || 8080
 const region = process.env.REGION || "us-east-1"
 const endpoint = process.env.ENDPOINT || ""
 
@@ -28,6 +32,8 @@ const defaultDeviceConfig = {
   cleanup: true,
   record: false,
 }
+
+let wsServer
 
 start()
 
@@ -41,14 +47,18 @@ async function start(){
   }
   app.use(cors())
   app.use(bodyParser.json())
-  app.use(express.static(path.join(__dirname, 'build')))
+  app.use(express.static(path.resolve(__dirname, 'build')))
 
   app.get("/admin/health", (req, res) => {
     res.send("OK")
   })
 
+  app.get("/admin", (req, res) => {
+    res.redirect("/")
+  })
+
   app.post("/api/register", async (req, res) => {
-    logger.debug(req.url)
+    logger.debug(req.url, req.ip)
     let sn = req.body.sn
     if(sn === undefined || !sn || sn === ""){
       res.status(500).json({error: "missing serial number"})
@@ -185,3 +195,42 @@ async function start(){
   )
 }
 
+function startWSserver(){
+  const httpServer  = http.createServer((req, res) => {
+    logger.info(`Received request for ${req.url}`)
+    res.writeHead(404)
+    res.end()
+  })
+
+  httpServer.listen(wsPort, ()=>{
+    logger.info(`WS server is listening on ${wsPort}`)
+  })
+
+  wsServer = new webSockerServer({
+    httpServer,
+    autoAcceptConnections: false
+  })
+
+  wsServer.on('request', req => {
+    if(!originIsAllowed()){
+      req.reject()
+      logger.warn(`unauthorized origin - ${req.origin}`)
+      return
+    }
+
+    let connection = req.accept('echo-protocol', req.origin)
+    logger.info('connection accepted')
+    connection.on('message', message => {
+      if(message.type === 'utf8'){
+        logger.info(`Received message: ${message}`)
+      } else if(message.type === 'binary'){
+        logger.info(`received Binary message of `)
+      }
+    })
+  })
+}
+
+function originIsAllowed(){
+  //logic
+  return true
+}

@@ -31,7 +31,16 @@ export const getDevicesAsync = () => {
     try {
       const result = await fetch(`${api}/api/devices`)
       const json = await result.json()
-      dispatch(updateDevices(json))
+      const list = json.map(device => {
+        let ips = JSON.parse(device.ip)
+        return {
+          id: device.id,
+          local: ips.local,
+          external: ips.external,
+          channels: device.channels
+        }
+      })
+      dispatch(updateDevices(list))
     } catch (err) {
       console.log(err)
     }
@@ -39,8 +48,9 @@ export const getDevicesAsync = () => {
 }
 
 export const getConfigAsync = (id) => {
-  return async (dispatch, state) => {
-    if (state.current !== id) {
+  return async (dispatch, getState) => {
+    let state = getState()
+    if (state.device.current !== id) {
       try {
         const result = await fetch(`${api}/api/device/${id}`)
         const config = await result.json()
@@ -53,12 +63,22 @@ export const getConfigAsync = (id) => {
   }
 }
 
-export const getRealtimeAsync = (id) => {
-  return async (dispatch) => {
+export const getRealtimeAsync = () => {
+  return async (dispatch, getState) => {
+    let state = getState()
+    if(state.device.current === undefined){
+      return
+    }
     try {
-      const result = await fetch(`${api}/api/realtime/${id}`)
+      const result = await fetch(`${api}/api/realtime/${state.device.current}`)
       const realtime = await result.json()
-      dispatch(updateRealtime(realtime))
+      let ips = JSON.parse(realtime.ip)
+      const device = {
+        channels: realtime.channels,
+        local: ips.local,
+        external: ips.external
+      }
+      dispatch(updateRealtime(device))
     } catch (err) {
       console.log(err)
     }

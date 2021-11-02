@@ -1,9 +1,8 @@
-import React, {useEffect, useRef} from "react"
+import React, {useState} from "react"
 import {Alert, Card} from "react-bootstrap"
 import Frame from "./frame"
 import {useSelector, useDispatch} from "react-redux"
 import {
-  getRealtimeAsync,
   selectRealtime,
   setConfigAsync,
 } from "../../features/device/deviceSlice"
@@ -11,30 +10,10 @@ import {
 function Recording(props) {
   const realtime = useSelector(selectRealtime)
   const dispatch = useDispatch()
-  const init = useRef({id: props.id, interval: 0})
+  const [connType, setConnType] = useState(true)
+
   let recordingColor
   let recordingMsg
-
-  useEffect(() => {
-    return () => {
-      clearInterval(init.current.interval)
-    }
-  }, [])
-
-  function refresh() {
-    if (!init.current.interval) {
-      init.current.interval = setInterval(() => {
-        if (props.id) {
-          dispatch(getRealtimeAsync(props.id))
-        }
-      }, 1000)
-    } else if (init.current.id !== props.id) {
-      clearInterval(init.current.interval)
-      init.current = {id: props.id, interval: null}
-      refresh()
-    }
-  }
-
 
   function isRule() {
     let now = new Date()
@@ -89,7 +68,7 @@ function Recording(props) {
         <Frame
           key={`Channels-${i}`}
           channel={i}
-          ip={realtime.ip}
+          ip={connType ? realtime.local : realtime.external}
           recording={recordingColor}
         />
       )
@@ -107,7 +86,6 @@ function Recording(props) {
     dispatch(setConfigAsync(body, props.id))
   }
 
-  refresh()
   setRecording()
 
   const styleMain = {
@@ -148,6 +126,18 @@ function Recording(props) {
   }
   return (
     <>
+      <Card>
+        <Card.Header>
+          Choose Local Connection (unchecked means external connection)
+        </Card.Header>
+        <Card.Body>
+          <input
+            type={"checkbox"}
+            checked={connType}
+            onChange={()=>setConnType(!connType)}
+          />
+        </Card.Body>
+      </Card>
       {realtime !== undefined ?
         <Card>
           <Card.Header>
